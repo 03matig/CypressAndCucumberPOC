@@ -32,25 +32,10 @@ jobs:
       - name: 🧪 Run Cypress (BDD)
         uses: cypress-io/github-action@v6
         with:
-          command: npx cypress run --spec "cypress/e2e/**/*.feature"
+          command: npx cypress run --spec=cypress/e2e/**/*.feature
           headed: false
         env:
+          CYPRESS_baseUrl:  ${{ secrets.CYPRESS_BASE_URL }}
           CYPRESS_username: ${{ secrets.CYPRESS_USERNAME }}
           CYPRESS_email:    ${{ secrets.CYPRESS_EMAIL }}
           CYPRESS_password: ${{ secrets.CYPRESS_PASSWORD }}
-
-      - name: ⬆️ Upload videos
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-videos
-          path: cypress/videos/**/*
-          if-no-files-found: ignore
-
-      - name: ⬆️ Upload screenshots (only on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-screenshots
-          path: cypress/screenshots/**/*
-          if-no-files-found: ignore
