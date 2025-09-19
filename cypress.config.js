@@ -7,14 +7,6 @@ async function setupNodeEvents(on, config) {
   // Habilita el preprocesador de Cucumber (JSON, etc.)
   await addCucumberPreprocessorPlugin(on, config);
 
-  // Registro de la tarea personalizada 'log'
-  on('task', {
-    log(message) {
-      console.log(message);
-      return null;
-    },
-  });
-
   // Hace que .feature y steps .ts/.js se transpilen con esbuild
   on(
     "file:preprocessor",

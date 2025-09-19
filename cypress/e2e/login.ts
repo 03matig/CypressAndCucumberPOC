@@ -8,13 +8,24 @@ import { Given, When, Then } from '@badeball/cypress-cucumber-preprocessor';
 const homePage = require("./POM/home.Page");
 const accountPage = require("./POM/account.Page");
 
+// Payloads de SQLi para reutilizar en escenarios
+/*
+const sqlPayloads = {
+  injection1: { "1stTry": '" OR "1"="1"', "2ndTry": "' OR '1'='1'" },
+  injection2: { "1stTry": '" OR ""=""', "2ndTry": "' OR ''=''" },
+  injection3: { "1stTry": '" OR 1=1', "2ndTry": "' OR 1=1" },
+};
+*/
+const baseUrl = Cypress.env('baseUrl') || Cypress.config('baseUrl');
+const username = Cypress.env('username');
+const email = Cypress.env('email');
+const password = Cypress.env('password');
 const sqlPayload = `" OR "1"="1"`;
 const wrongPassword = 'this-is-definitely-wrong-123!';
 
 Given('the user navigates to the login page', () => {
-  const baseUrl = Cypress.env('baseUrl');
   cy.viewport(1920, 1080);
-  cy.task('log', `Base URL: ${baseUrl}`);
+  console.log('Base URL:', baseUrl);
   cy.visit(baseUrl);
   homePage.validateAccessToHomePage();
   homePage.clickAccountButton();
@@ -22,66 +33,49 @@ Given('the user navigates to the login page', () => {
 });
 
 When('they sign in with a valid email', () => {
-  const email = Cypress.env('email');
-  const password = Cypress.env('password');
   accountPage.typeEmailOnLoginForm(email);
   accountPage.typePasswordOnLoginForm(password);
   accountPage.clickSubmitOnLoginForm();
 });
 
 When('they sign in with a valid username', () => {
-  const username = Cypress.env('username');
-  const password = Cypress.env('password');
   accountPage.typeUsernameOnLoginForm(username);
   accountPage.typePasswordOnLoginForm(password);
   accountPage.clickSubmitOnLoginForm();
 });
 
 When('they try to sign in with a SQL payload in the password field', () => {
-  const username = Cypress.env('username');
-  const email = Cypress.env('email');
   const user = username || email;
-
   accountPage.typeUsernameOnLoginForm(user);
   accountPage.typePasswordOnLoginForm(sqlPayload);
   accountPage.clickSubmitOnLoginForm();
 });
 
 When('they sign in with a wrong password', () => {
-  const username = Cypress.env('username');
-  const email = Cypress.env('email');
   const user = username || email;
-
   accountPage.typeUsernameOnLoginForm(user);
   accountPage.typePasswordOnLoginForm(wrongPassword);
   accountPage.clickSubmitOnLoginForm();
 });
 
 When('they try to sign in without entering a username or email', () => {
-  const password = Cypress.env('password');
   accountPage.typePasswordOnLoginForm(password);
   accountPage.clickSubmitOnLoginForm();
 });
 
 When('they try to sign in without entering a password', () => {
-  const username = Cypress.env('username');
-  const email = Cypress.env('email');
   const user = username || email;
-
   accountPage.typeUsernameOnLoginForm(user);
   accountPage.clickSubmitOnLoginForm();
 });
 
 Then('the greeting for the configured user should be visible', () => {
-  const username = Cypress.env('username');
+  // Your POM asserts: "Hello {username} (not {username}? Log out)"
   accountPage.validateRegistrationOrLogin(username);
 });
 
 Then('an incorrect password error should be shown', () => {
-  const username = Cypress.env('username');
-  const email = Cypress.env('email');
   const user = username || email;
-
   const message = `Error: The password you entered for the username ${user} is incorrect.`;
   accountPage.getErrorMessage(message);
 });
