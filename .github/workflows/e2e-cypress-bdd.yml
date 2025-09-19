@@ -3,7 +3,6 @@ name: E2E • Cypress + Cucumber (Badeball)
 on:
   push:
     branches: [ main, master ]
-  pull_request:
 
 concurrency:
   group: e2e-${{ github.ref }}
@@ -28,18 +27,6 @@ jobs:
 
       - name: ✅ Verify Cypress binary
         run: npx cypress verify
-
-      - name: Show Cypress environment variables
-        run: |
-          echo "baseUrl = $CYPRESS_baseUrl"
-          echo "username = $CYPRESS_username"
-          echo "email = $CYPRESS_email"
-          echo "password = $CYPRESS_password"
-        env:
-          CYPRESS_baseUrl: ${{ secrets.CYPRESS_BASE_URL }}
-          CYPRESS_username: ${{ secrets.CYPRESS_USERNAME }}
-          CYPRESS_email: ${{ secrets.CYPRESS_EMAIL }}
-          CYPRESS_password: ${{ secrets.CYPRESS_PASSWORD }}
 
       - name: 🧪 Run Cypress (BDD)
         uses: cypress-io/github-action@v6
