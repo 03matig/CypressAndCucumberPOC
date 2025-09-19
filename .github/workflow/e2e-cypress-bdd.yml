@@ -1,0 +1,95 @@
+name: E2E • Cypress + Cucumber (Badeball)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v4
+
+      - name: 🧰 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install deps
+        run: npm ci
+
+      - name: ✅ Verify Cypress binary
+        run: npx cypress verify
+
+      - name: 🧪 Run Cypress (BDD)
+        uses: cypress-io/github-action@v6
+        with:
+          # tu configuración ya limita a .feature mediante specPattern
+          command: npx cypress run --browser chrome
+          headed: false
+          # si usas electron, puedes omitir --browser
+        env:
+          # Si quieres inyectar secretos como env de Cypress:
+          # Cypress lee variables con prefijo CYPRESS_
+          CYPRESS_username: ${{ secrets.CYPRESS_USERNAME }}
+          CYPRESS_email:    ${{ secrets.CYPRESS_EMAIL }}
+          CYPRESS_password: ${{ secrets.CYPRESS_PASSWORD }}
+
+      # 👉 Artefactos siempre útiles para depurar
+      - name: ⬆️ Upload videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-videos
+          path: cypress/videos/**/*
+          if-no-files-found: ignore
+
+      - name: ⬆️ Upload screenshots (only on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots/**/*
+          if-no-files-found: ignore
+
+      # Si generas salidas de cucumber (json/messages), súbelas también
+      - name: ⬆️ Upload cucumber outputs (if any)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-outputs
+          path: |
+            .cucumber/**
+            cucumber-json/**
+            cucumber-report*/**
+            reports/**/cucumber*.json
+          if-no-files-found: ignore
+
+      # (Opcional) Generar un HTML report si existen JSONs
+      # Requiere: npm i -D multiple-cucumber-html-reporter
+      - name: 📝 Generate Cucumber HTML (optional)
+        if: always()
+        run: |
+          if ls .cucumber/*.json 1> /dev/null 2>&1; then
+            npx multiple-cucumber-html-reporter \
+              --jsonDir .cucumber \
+              --reportPath cucumber-html \
+              --reportName "Cypress BDD Report" \
+              --pageTitle "E2E Report" \
+              --displayDuration;
+          fi
+      - name: ⬆️ Upload Cucumber HTML (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-html
+          path: cucumber-html/**
+          if-no-files-found: ignore
